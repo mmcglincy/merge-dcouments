@@ -13,7 +13,11 @@ declare(strict_types=1);
 
 function normalizeHeader(string $header): string
 {
-    return trim((string) preg_replace('/^\xEF\xBB\xBF/u', '', $header));
+    if (strncmp($header, "\xEF\xBB\xBF", 3) === 0) {
+        $header = substr($header, 3);
+    }
+
+    return trim($header);
 }
 
 function normalizeHeaders(array $headers, string $path): array
