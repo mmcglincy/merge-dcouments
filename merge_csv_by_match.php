@@ -23,8 +23,12 @@ function normalizeHeader(string $header): string
 function normalizeHeaders(array $headers, string $path): array
 {
     $normalizedHeaders = [];
-    foreach ($headers as $header) {
+    foreach ($headers as $index => $header) {
         $normalizedHeader = normalizeHeader((string) $header);
+        if ($normalizedHeader === '') {
+            $normalizedHeader = 'unnamed_column_' . ($index + 1);
+        }
+
         if (in_array($normalizedHeader, $normalizedHeaders, true)) {
             throw new RuntimeException(
                 "{$path} contains duplicate header names after normalization: '{$normalizedHeader}'"

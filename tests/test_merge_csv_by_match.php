@@ -125,4 +125,39 @@ assertSameValue(
     'BOM-prefixed match headers should still allow rows to be matched.'
 );
 
+[$blankHeaderHeaders, $blankHeaderRows] = runMergeCase(
+    "match,Name,IPTV CN IP,,PORT\n" .
+    "A,Alice,10.0.0.1,group-a,1\n" .
+    "B,Bob,10.0.0.2,group-b,2\n",
+    "match,Name,IPTV CN IP,,PORT\n" .
+    "B,Robert,10.0.9.9,group-z,9\n"
+);
+
+assertSameValue(
+    ['match', 'Name', 'IPTV CN IP', 'unnamed_column_4', 'PORT'],
+    $blankHeaderHeaders,
+    'Blank header names should be auto-filled with stable placeholder names.'
+);
+
+assertSameValue(
+    [
+        [
+            'match' => 'A',
+            'Name' => 'Alice',
+            'IPTV CN IP' => '10.0.0.1',
+            'unnamed_column_4' => 'group-a',
+            'PORT' => '1',
+        ],
+        [
+            'match' => 'B',
+            'Name' => 'Robert',
+            'IPTV CN IP' => '10.0.9.9',
+            'unnamed_column_4' => 'group-z',
+            'PORT' => '9',
+        ],
+    ],
+    $blankHeaderRows,
+    'Rows with blank header columns should still merge correctly.'
+);
+
 fwrite(STDOUT, "OK\n");
