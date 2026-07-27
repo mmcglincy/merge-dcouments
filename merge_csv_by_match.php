@@ -11,6 +11,27 @@ declare(strict_types=1);
  * - otherwise, write the row from the first CSV to the output.
  */
 
+function normalizeHeader(string $header): string
+{
+    return trim((string) preg_replace('/^\xEF\xBB\xBF/u', '', $header));
+}
+
+function normalizeHeaders(array $headers, string $path): array
+{
+    $normalizedHeaders = [];
+    foreach ($headers as $header) {
+        $normalizedHeader = normalizeHeader((string) $header);
+        if (in_array($normalizedHeader, $normalizedHeaders, true)) {
+            throw new RuntimeException(
+                "{$path} contains duplicate header names after normalization: '{$normalizedHeader}'"
+            );
+        }
+        $normalizedHeaders[] = $normalizedHeader;
+    }
+
+    return $normalizedHeaders;
+}
+
 function readCsv(string $path): array
 {
     $handle = fopen($path, 'rb');
@@ -23,6 +44,7 @@ function readCsv(string $path): array
         fclose($handle);
         throw new RuntimeException("{$path} is missing a header row");
     }
+    $headers = normalizeHeaders($headers, $path);
 
     $rows = [];
     while (($values = fgetcsv($handle)) !== false) {
@@ -76,6 +98,8 @@ function mergeRows(
     string $matchColumn,
     string $secondSourcePath
 ): array {
+    $matchColumn = normalizeHeader($matchColumn);
+
     if (!in_array($matchColumn, $firstHeaders, true)) {
         throw new RuntimeException("first CSV does not contain a '{$matchColumn}' column");
     }
